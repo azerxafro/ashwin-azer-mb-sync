@@ -1,0 +1,33 @@
+# Environment / secrets
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Output artifacts
+reports/
+evidence_packs/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Pytest cache
+.pytest_cache/
+.coverage
+htmlcov/
