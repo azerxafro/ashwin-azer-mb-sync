@@ -100,23 +100,23 @@
   "use strict";
   // Poll /status while a job is running so the page auto-refreshes.
   {% if job.running %}
-  var poll = setInterval(function () {
+  var pollInterval = setInterval(function () {
     fetch("{{ url_for('status') }}")
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (!data.running) {
-          clearInterval(poll);
+          clearInterval(pollInterval);
           window.location.reload();
         }
       })
-      .catch(function () { clearInterval(poll); });
+      .catch(function () { clearInterval(pollInterval); });
   }, 3000);
   {% endif %}
 
   // Disable the Run button immediately on submit to prevent double-clicks.
-  var form = document.getElementById("run-form");
-  if (form) {
-    form.addEventListener("submit", function () {
+  var runForm = document.getElementById("run-form");
+  if (runForm) {
+    runForm.addEventListener("submit", function () {
       var btn = document.getElementById("run-btn");
       if (btn) { btn.disabled = true; btn.textContent = "⏳ Starting…"; }
     });

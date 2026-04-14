@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from flask import Flask, abort, redirect, render_template, request, url_for  # noqa: E402
+from flask import Flask, abort, jsonify, redirect, render_template, request, url_for  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -117,8 +117,10 @@ def _list_reports() -> list[dict[str, Any]]:
 
 def _load_report(filename: str) -> dict[str, Any]:
     """Load and return a report dict by filename, or raise 404."""
-    path = REPORTS_DIR / filename
-    if not path.exists() or not path.is_file():
+    reports_dir = REPORTS_DIR.resolve()
+    path = (reports_dir / filename).resolve()
+    # Ensure the resolved path is strictly inside REPORTS_DIR (prevent traversal)
+    if not path.is_relative_to(reports_dir) or not path.is_file():
         abort(404)
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -160,9 +162,6 @@ def run_scrape():
 
 @app.route("/report/<filename>")
 def view_report(filename: str) -> str:
-    # Prevent path traversal
-    if "/" in filename or "\\" in filename or ".." in filename:
-        abort(400)
     report = _load_report(filename)
     return render_template("report.html", report=report, filename=filename)
 
@@ -170,8 +169,6 @@ def view_report(filename: str) -> str:
 @app.route("/status")
 def status():
     """JSON endpoint for polling job status."""
-    from flask import jsonify
-
     with _job_lock:
         return jsonify(dict(_job_state))
 
@@ -182,4 +179,4 @@ def status():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=False, host="127.0.0.1", port=5000)
