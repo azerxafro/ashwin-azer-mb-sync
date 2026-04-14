@@ -6,10 +6,6 @@ on:
     - cron: "0 2 * * 1"
   workflow_dispatch:
     inputs:
-      source:
-        description: "Data source to ingest (spotify | apple | all)"
-        required: false
-        default: "all"
       evidence:
         description: "Generate evidence pack alongside the report (true | false)"
         required: false
@@ -17,7 +13,7 @@ on:
 
 jobs:
   sync:
-    name: Ingest & Generate MusicBrainz Report
+    name: Scrape & Generate MusicBrainz Report
     runs-on: ubuntu-latest
 
     permissions:
@@ -37,29 +33,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Write Apple Music private key
-        env:
-          APPLE_PRIVATE_KEY: ${{ secrets.APPLE_PRIVATE_KEY }}
-        run: printf '%s' "$APPLE_PRIVATE_KEY" > "${{ runner.temp }}/AuthKey.p8"
-
       - name: Run sync pipeline
         env:
-          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
-          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
-          APPLE_PRIVATE_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
-          SPOTIFY_ARTIST_ID: "6M1VSmwtcuwS1DnvXTGk7P"
-          APPLE_MUSIC_ARTIST_ID: "1497428225"
-          APPLE_MUSIC_STOREFRONT: "in"
+          ARTIST_NAME: "Ashwin Azer"
         run: |
-          SOURCE="${{ github.event.inputs.source || 'all' }}"
           EVIDENCE_FLAG=""
           if [ "${{ github.event.inputs.evidence || 'true' }}" = "true" ]; then
             EVIDENCE_FLAG="--evidence"
           fi
 
-          python -m src.main "$SOURCE" $EVIDENCE_FLAG
+          python -m src.main web $EVIDENCE_FLAG
 
       - name: Upload reports as artifacts
         uses: actions/upload-artifact@v4
@@ -130,3 +113,4 @@ jobs:
               });
               core.info(`Created issue #${created.data.number}`);
             }
+

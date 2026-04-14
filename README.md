@@ -1,6 +1,6 @@
 # ashwin-azer-mb-sync
 
-A Python CLI tool that ingests artist metadata from **Spotify** and **Apple Music** for the artist [Ashwin Azer](https://open.spotify.com/artist/6M1VSmwtcuwS1DnvXTGk7P), normalizes it to be compatible with the [MusicBrainz](https://musicbrainz.org) data model, and generates human-readable reports with pre-filled MusicBrainz edit-form links to assist with **manual** submissions.
+A Python CLI tool that scrapes artist metadata for [Ashwin Azer](https://www.last.fm/music/Ashwin+Azer) from **publicly available web sources** (Last.fm), normalizes it to be compatible with the [MusicBrainz](https://musicbrainz.org) data model, and generates human-readable reports with pre-filled MusicBrainz edit-form links to assist with **manual** submissions.
 
 > ⚠️ **MusicBrainz does not allow automated edits.** All generated links are for manual submission by a logged-in MusicBrainz editor.
 
@@ -8,29 +8,26 @@ A Python CLI tool that ingests artist metadata from **Spotify** and **Apple Musi
 
 ## Features
 
-- 🎵 **Spotify ingestion** — artist profile, full discography, track ISRCs via the [Spotify Web API](https://developer.spotify.com/documentation/web-api)
-- 🍎 **Apple Music ingestion** — artist profile, albums, tracks, ISRCs via the [Apple Music API](https://developer.apple.com/documentation/applemusicapi)
-- 🔀 **Metadata normalization** — unified schema compatible with the MusicBrainz data model; merged view from both sources
+- 🌐 **No API keys required** — all data is scraped from publicly accessible web pages (Last.fm)
+- 🔀 **Metadata normalization** — unified schema compatible with the MusicBrainz data model
 - 📄 **MusicBrainz reports** — JSON + Markdown with pre-filled `/release/add` edit URLs and missing-field warnings
 - 🗂️ **Evidence packs** — structured JSON/Markdown citation bundles (source URLs, ISRC lookup links) to back up MusicBrainz edits
 - ⚙️ **GitHub Actions** — optional scheduled workflow that runs the pipeline weekly and opens/updates a GitHub Issue with results
 
 ---
 
-## Artist IDs
+## Artist
 
-| Source | Artist | ID / URL |
-|--------|--------|----------|
-| Spotify | Ashwin Azer | [`6M1VSmwtcuwS1DnvXTGk7P`](https://open.spotify.com/artist/6M1VSmwtcuwS1DnvXTGk7P) |
-| Apple Music | Ashwin Azer | [`1497428225`](https://music.apple.com/in/artist/ashwin-azer/1497428225) |
+| Source | Artist | URL |
+|--------|--------|-----|
+| Last.fm | Ashwin Azer | [last.fm/music/Ashwin+Azer](https://www.last.fm/music/Ashwin+Azer) |
 
 ---
 
 ## Prerequisites
 
 - Python 3.10 or later
-- A **Spotify Developer** account — [Create an app](https://developer.spotify.com/dashboard)
-- An **Apple Developer** account with a [MusicKit key](https://developer.apple.com/account/resources/authkeys/list) (`.p8` file)
+- No API accounts or credentials needed
 
 ---
 
@@ -49,28 +46,22 @@ cd ashwin-azer-mb-sync
 pip install -r requirements.txt
 ```
 
-### 3. Configure environment variables
+### 3. (Optional) Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and fill in your credentials (see [Environment Variables](#environment-variables) below).
+The defaults work out of the box for Ashwin Azer. Edit `.env` only if you want to change the artist or output directories.
 
 ### 4. Run the tool
 
 ```bash
-# Ingest from both Spotify and Apple Music, generate merged report
-python -m src.main all
-
-# Ingest from Spotify only
-python -m src.main spotify
-
-# Ingest from Apple Music only
-python -m src.main apple
+# Scrape public sources and generate report
+python -m src.main web
 
 # Also generate an evidence pack
-python -m src.main all --evidence
+python -m src.main web --evidence
 ```
 
 Reports are written to the `reports/` directory; evidence packs to `evidence_packs/`.
@@ -79,35 +70,16 @@ Reports are written to the `reports/` directory; evidence packs to `evidence_pac
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in the values below.
+Copy `.env.example` to `.env` and optionally override the values below.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `SPOTIFY_CLIENT_ID` | ✅ for Spotify | Spotify app client ID |
-| `SPOTIFY_CLIENT_SECRET` | ✅ for Spotify | Spotify app client secret |
-| `APPLE_TEAM_ID` | ✅ for Apple | Apple Developer Team ID |
-| `APPLE_KEY_ID` | ✅ for Apple | MusicKit key ID |
-| `APPLE_PRIVATE_KEY_PATH` | ✅ for Apple | Path to the `.p8` private key file |
-| `SPOTIFY_ARTIST_ID` | ❌ | Spotify artist ID (default: `6M1VSmwtcuwS1DnvXTGk7P`) |
-| `APPLE_MUSIC_ARTIST_ID` | ❌ | Apple Music artist ID (default: `1497428225`) |
-| `APPLE_MUSIC_STOREFRONT` | ❌ | Apple Music country code (default: `in`) |
+| `ARTIST_NAME` | ❌ | Artist name to look up (default: `Ashwin Azer`) |
+| `LASTFM_ARTIST_URL` | ❌ | Override the Last.fm URL slug if auto-detection fails |
+| `SCRAPE_DELAY` | ❌ | Seconds to pause between page requests (default: `1.0`) |
 | `ARTIST_MBID` | ❌ | MusicBrainz MBID for the artist if already known |
 | `REPORTS_DIR` | ❌ | Output directory for reports (default: `reports`) |
 | `EVIDENCE_DIR` | ❌ | Output directory for evidence packs (default: `evidence_packs`) |
-
-### Obtaining Spotify credentials
-
-1. Go to <https://developer.spotify.com/dashboard> and sign in.
-2. Click **Create app** and fill in the name and redirect URI (any valid URL).
-3. Copy the **Client ID** and **Client Secret** into your `.env`.
-
-### Obtaining Apple Music (MusicKit) credentials
-
-1. Sign in to <https://developer.apple.com/account>.
-2. Navigate to **Certificates, Identifiers & Profiles → Keys**.
-3. Click **+** to create a new key, enable **MusicKit**, and download the `.p8` file.
-4. Note your **Team ID** (top right of the Apple Developer portal) and the **Key ID** shown after creation.
-5. Set `APPLE_PRIVATE_KEY_PATH` to the full path of the downloaded `.p8` file.
 
 ---
 
@@ -116,11 +88,11 @@ Copy `.env.example` to `.env` and fill in the values below.
 ### `reports/mb_report_<timestamp>.json`
 
 Machine-readable JSON with:
-- Artist metadata from both sources
+- Artist metadata from Last.fm
 - All release candidates with normalized fields
 - Pre-filled MusicBrainz `/release/add` URLs
 - Missing-field warnings per release
-- Full track listings with ISRCs
+- Full track listings
 
 ### `reports/mb_report_<timestamp>.md`
 
@@ -129,8 +101,8 @@ Human-readable Markdown summary suitable for posting in GitHub Issues or MusicBr
 ### `evidence_packs/evidence_pack_<timestamp>.json` / `.md`
 
 Structured citation bundles containing:
-- Source URLs (Spotify, Apple Music) for each release
-- ISRC lookup links (IFPI, MusicBrainz) for each track
+- Source URLs (Last.fm) for each release
+- ISRC lookup links (IFPI, MusicBrainz) for each track where ISRCs are available
 
 ---
 
@@ -138,20 +110,8 @@ Structured citation bundles containing:
 
 The workflow at `.github/workflows/sync.yml` runs automatically every **Monday at 02:00 UTC** (or on demand via `workflow_dispatch`).
 
-### Required GitHub Secrets
-
-Add the following secrets in **Settings → Secrets and variables → Actions**:
-
-| Secret | Description |
-|--------|-------------|
-| `SPOTIFY_CLIENT_ID` | Spotify app client ID |
-| `SPOTIFY_CLIENT_SECRET` | Spotify app client secret |
-| `APPLE_TEAM_ID` | Apple Developer Team ID |
-| `APPLE_KEY_ID` | MusicKit key ID |
-| `APPLE_PRIVATE_KEY` | Contents of the `.p8` private key file (paste the full text) |
-
-The workflow will:
-1. Run the full ingestion and normalization pipeline.
+No secrets are required. The workflow will:
+1. Run the full scraping and normalization pipeline.
 2. Upload reports and evidence packs as workflow artifacts (retained for 30 days).
 3. Open (or update) a GitHub Issue labelled `mb-sync` with the Markdown report.
 
@@ -168,8 +128,7 @@ ashwin-azer-mb-sync/
 ├── src/
 │   ├── __init__.py
 │   ├── main.py                  # CLI entry point
-│   ├── spotify_ingest.py        # Spotify Web API ingestion
-│   ├── apple_music_ingest.py    # Apple Music API ingestion
+│   ├── web_scrape_ingest.py     # Last.fm web scraping (no API keys)
 │   ├── normalize.py             # Metadata normalization & merging
 │   ├── mb_report.py             # MusicBrainz report generation
 │   └── evidence_pack.py         # Evidence pack generation
@@ -190,15 +149,14 @@ pip install -r requirements.txt
 pytest tests/ -v
 ```
 
-The test suite covers all normalization and merge logic and does **not** require API credentials.
+The test suite covers all normalization and merge logic and does **not** require any credentials.
 
 ---
 
 ## Security Notes
 
 - **Never commit your `.env` file** — it is listed in `.gitignore`.
-- **Never share API keys or private key files** in issues, PRs, or chat.
-- The tool makes only **read** requests to Spotify and Apple Music APIs.
+- The tool makes only **read** requests to public web pages.
 - No credentials are sent to MusicBrainz; the generated edit URLs are for manual use by a logged-in editor.
 
 ---
@@ -214,3 +172,4 @@ The test suite covers all normalization and merge logic and does **not** require
 ## License
 
 To be determined. Add a `LICENSE` file and update this section accordingly.
+

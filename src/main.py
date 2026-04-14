@@ -5,10 +5,8 @@ CLI entry point for the Ashwin Azer MusicBrainz sync tool.
 
 Usage examples:
     python -m src.main --help
-    python -m src.main spotify          # ingest + report from Spotify only
-    python -m src.main apple            # ingest + report from Apple Music only
-    python -m src.main all              # ingest from both, merge, full report
-    python -m src.main all --evidence   # also generate evidence pack
+    python -m src.main web              # scrape public sources + report
+    python -m src.main web --evidence   # also generate evidence pack
 """
 
 from __future__ import annotations
@@ -25,7 +23,7 @@ from dotenv import load_dotenv
 # Load .env file if present
 load_dotenv()
 
-from src.normalize import normalize_source_data, merge_sources  # noqa: E402
+from src.normalize import normalize_source_data  # noqa: E402
 from src.mb_report import build_report, write_json_report, write_markdown_report  # noqa: E402
 from src.evidence_pack import build_evidence_pack, write_evidence_pack, write_evidence_markdown  # noqa: E402
 
@@ -37,18 +35,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _run_spotify() -> dict:
-    from src.spotify_ingest import fetch_full_discography
+def _run_web_scrape() -> dict:
+    from src.web_scrape_ingest import fetch_full_discography
 
-    logger.info("=== Ingesting from Spotify ===")
-    raw = fetch_full_discography()
-    return normalize_source_data(raw)
-
-
-def _run_apple() -> dict:
-    from src.apple_music_ingest import fetch_full_discography
-
-    logger.info("=== Ingesting from Apple Music ===")
+    logger.info("=== Scraping public sources (Last.fm) ===")
     raw = fetch_full_discography()
     return normalize_source_data(raw)
 
@@ -71,27 +61,15 @@ def _write_reports(merged_data: dict, generate_evidence: bool) -> None:
         )
 
 
-def cmd_spotify(args: argparse.Namespace) -> None:
-    spotify_data = _run_spotify()
-    _write_reports(spotify_data, args.evidence)
-
-
-def cmd_apple(args: argparse.Namespace) -> None:
-    apple_data = _run_apple()
-    _write_reports(apple_data, args.evidence)
-
-
-def cmd_all(args: argparse.Namespace) -> None:
-    spotify_data = _run_spotify()
-    apple_data = _run_apple()
-    merged = merge_sources(spotify_data, apple_data)
-    _write_reports(merged, args.evidence)
+def cmd_web(args: argparse.Namespace) -> None:
+    data = _run_web_scrape()
+    _write_reports(data, args.evidence)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Ashwin Azer MusicBrainz Sync — pull artist data from "
-        "Spotify and Apple Music and generate MusicBrainz edit suggestions.",
+        description="Ashwin Azer MusicBrainz Sync — scrape artist data from "
+        "public web sources and generate MusicBrainz edit suggestions.",
     )
     parser.add_argument(
         "--evidence",
@@ -101,26 +79,12 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    sp_spotify = subparsers.add_parser(
-        "spotify",
-        help="Ingest from Spotify only and produce a report.",
+    sp_web = subparsers.add_parser(
+        "web",
+        help="Scrape public sources (Last.fm) and produce a report.",
     )
-    sp_spotify.add_argument("--evidence", action="store_true")
-    sp_spotify.set_defaults(func=cmd_spotify)
-
-    sp_apple = subparsers.add_parser(
-        "apple",
-        help="Ingest from Apple Music only and produce a report.",
-    )
-    sp_apple.add_argument("--evidence", action="store_true")
-    sp_apple.set_defaults(func=cmd_apple)
-
-    sp_all = subparsers.add_parser(
-        "all",
-        help="Ingest from both sources, merge, and produce a report.",
-    )
-    sp_all.add_argument("--evidence", action="store_true")
-    sp_all.set_defaults(func=cmd_all)
+    sp_web.add_argument("--evidence", action="store_true")
+    sp_web.set_defaults(func=cmd_web)
 
     args = parser.parse_args(argv)
     try:
@@ -128,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     except KeyError as exc:
         logger.error(
             "Missing required environment variable: %s. "
-            "Copy .env.example to .env and fill in your credentials.",
+            "Copy .env.example to .env and fill in your settings.",
             exc,
         )
         return 1
