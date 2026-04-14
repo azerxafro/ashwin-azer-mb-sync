@@ -54,7 +54,20 @@ cp .env.example .env
 
 The defaults work out of the box for Ashwin Azer. Edit `.env` only if you want to change the artist or output directories.
 
-### 4. Run the tool
+### 4a. Run the web UI (recommended)
+
+```bash
+python -m src.webapp
+```
+
+Open **http://localhost:5000** in your browser. From the dashboard you can:
+
+- Trigger a new scrape with a single click (optionally including an evidence pack).
+- Browse all previously generated reports.
+- Inspect each report — release candidates, track listings, ISRC links, and
+  pre-filled MusicBrainz "Add Release" buttons.
+
+### 4b. Run the CLI
 
 ```bash
 # Scrape public sources and generate report
@@ -128,10 +141,15 @@ ashwin-azer-mb-sync/
 ├── src/
 │   ├── __init__.py
 │   ├── main.py                  # CLI entry point
+│   ├── webapp.py                # Flask web UI (python -m src.webapp)
 │   ├── web_scrape_ingest.py     # Last.fm web scraping (no API keys)
 │   ├── normalize.py             # Metadata normalization & merging
 │   ├── mb_report.py             # MusicBrainz report generation
-│   └── evidence_pack.py         # Evidence pack generation
+│   ├── evidence_pack.py         # Evidence pack generation
+│   └── templates/               # Jinja2 HTML templates for the web UI
+│       ├── base.html
+│       ├── index.html           # Dashboard — list reports & run a scan
+│       └── report.html          # Report detail view
 ├── tests/
 │   ├── __init__.py
 │   └── test_normalize.py        # Unit tests for normalization logic

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}{{ report.artist.name }} — Report{% endblock %}
+
+{% block content %}
+{% set artist = report.artist %}
+
+{# ── Breadcrumb ── #}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active">{{ filename }}</li>
+  </ol>
+</nav>
+
+{# ── Note banner ── #}
+<div class="alert alert-warning py-2 mb-4 small">
+  ⚠️ {{ report.note }}
+</div>
+
+{# ── Artist card ── #}
+<div class="card mb-4">
+  <div class="card-header"><strong>Artist</strong></div>
+  <div class="card-body">
+    <h4 class="mb-1">{{ artist.name }}</h4>
+    <p class="text-muted small mb-2">
+      Generated {{ report.generated_at[:19].replace('T',' ') }} UTC
+    </p>
+    <div class="d-flex flex-wrap gap-3 small">
+      {% if artist.spotify_url %}
+        <a href="{{ artist.spotify_url }}" target="_blank" rel="noopener">🎵 Spotify</a>
+      {% endif %}
+      {% if artist.apple_music_url %}
+        <a href="{{ artist.apple_music_url }}" target="_blank" rel="noopener">🍎 Apple Music</a>
+      {% endif %}
+      {% if artist.mb_url %}
+        <a href="{{ artist.mb_url }}" target="_blank" rel="noopener">🎼 MusicBrainz</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{# ── Release candidates ── #}
+<h5 class="mb-3">Release Candidates
+  <span class="badge bg-secondary">{{ report.release_candidates | length }}</span>
+</h5>
+
+{% if not report.release_candidates %}
+  <div class="alert alert-info">No release candidates in this report.</div>
+{% endif %}
+
+{% for c in report.release_candidates %}
+  {% set rd = c.release_date %}
+  {% set date_str = [rd.year, rd.month, rd.day] | select | join('-') %}
+
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-start gap-2 flex-wrap">
+      <div>
+        <span class="fw-bold">{{ loop.index }}. {{ c.title }}</span>
+        <span class="badge bg-light text-dark border ms-1">{{ c.type or 'Unknown' }}</span>
+        <span class="text-muted small ms-1">{{ date_str or 'Date unknown' }}</span>
+      </div>
+      <div class="ms-auto d-flex gap-2 flex-wrap">
+        {% if c.missing_fields %}
+          <span class="badge bg-warning text-dark badge-missing">
+            ⚠️ Missing: {{ c.missing_fields | join(', ') }}
+          </span>
+        {% else %}
+          <span class="badge bg-success">✓ Complete</span>
+        {% endif %}
+        <a href="{{ c.mb_add_release_url }}" target="_blank" rel="noopener"
+           class="btn btn-sm btn-outline-primary mb-add-btn">
+          ➕ Add to MusicBrainz
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body pb-0">
+      <div class="row g-2 small mb-2">
+        {% if c.label %}
+          <div class="col-auto"><span class="text-muted">Label:</span> {{ c.label }}</div>
+        {% endif %}
+        {% if c.barcode %}
+          <div class="col-auto"><span class="text-muted">Barcode/UPC:</span> {{ c.barcode }}</div>
+        {% endif %}
+        {% set src = c.source_urls %}
+        {% if src.spotify %}
+          <div class="col-auto">
+            <a href="{{ src.spotify }}" target="_blank" rel="noopener">🎵 Spotify</a>
+          </div>
+        {% endif %}
+        {% if src.apple_music %}
+          <div class="col-auto">
+            <a href="{{ src.apple_music }}" target="_blank" rel="noopener">🍎 Apple Music</a>
+          </div>
+        {% endif %}
+        {% if c.artwork_url %}
+          <div class="col-auto">
+            <a href="{{ c.artwork_url }}" target="_blank" rel="noopener">🖼 Artwork</a>
+          </div>
+        {% endif %}
+      </div>
+
+      {# ── Track listing ── #}
+      {% if c.tracks %}
+        <table class="table table-sm track-table">
+          <thead class="table-light">
+            <tr>
+              <th class="text-center" style="width:2.5rem">#</th>
+              <th>Title</th>
+              <th class="text-end">Duration</th>
+              <th>ISRC</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in c.tracks %}
+            <tr>
+              <td class="text-center text-muted">{{ t.position or '' }}</td>
+              <td>{{ t.title or '' }}</td>
+              <td class="text-end text-muted">
+                {% if t.duration_seconds %}
+                  {{ (t.duration_seconds // 60) }}:{{ '%02d' % (t.duration_seconds % 60) }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td class="font-monospace small">
+                {% if t.isrc %}
+                  <a href="https://musicbrainz.org/isrc/{{ t.isrc }}"
+                     target="_blank" rel="noopener">{{ t.isrc }}</a>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-muted small">No track data available.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+
+<a href="{{ url_for('index') }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+{% endblock %}
