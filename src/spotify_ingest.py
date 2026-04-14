@@ -25,10 +25,10 @@ SPOTIFY_ARTIST_ID = os.getenv("SPOTIFY_ARTIST_ID", "6M1VSmwtcuwS1DnvXTGk7P")
 
 def _client() -> spotipy.Spotify:
     """Return an authenticated Spotify client using the Client Credentials flow."""
-    client_id = os.environ.get("SPOTIFY_CLIENT_ID", "")
-    client_secret = os.environ.get("SPOTIFY_CLIENT_SECRET", "")
+    client_id = os.environ.get("SPOTIFY_CLIENT_ID")
     if not client_id:
         raise KeyError("SPOTIFY_CLIENT_ID")
+    client_secret = os.environ.get("SPOTIFY_CLIENT_SECRET")
     if not client_secret:
         raise KeyError("SPOTIFY_CLIENT_SECRET")
     auth_manager = SpotifyClientCredentials(
