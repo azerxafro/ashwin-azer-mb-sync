@@ -13,4 +13,6 @@ from src.webapp import app
 if __name__ == "__main__":
     host = os.getenv("FLASK_HOST", "127.0.0.1")
     port = int(os.getenv("FLASK_PORT", "5000"))
+    if host == "0.0.0.0":
+        print("Warning: Flask development server is exposed on all interfaces; use a WSGI server in production.")
     app.run(debug=False, host=host, port=port)
