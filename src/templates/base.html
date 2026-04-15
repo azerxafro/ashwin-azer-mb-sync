@@ -9,9 +9,50 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
         crossorigin="anonymous">
   <style>
-    body { background-color: #f8f9fa; }
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.16);
+      --glass-border: rgba(255, 255, 255, 0.28);
+      --glass-shadow: 0 8px 30px rgba(15, 23, 42, 0.25);
+      --text-main: #0f172a;
+      --text-soft: #e2e8f0;
+      --navbar-bg: rgba(2, 6, 23, 0.55);
+    }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.28), transparent 40%),
+        radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.22), transparent 35%),
+        linear-gradient(135deg, #0f172a, #1e293b 45%, #334155);
+      color: var(--text-soft);
+    }
     .navbar-brand { font-weight: 700; letter-spacing: .03em; }
-    .card { box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .navbar {
+      background: var(--navbar-bg) !important;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    }
+    .card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      color: var(--text-soft);
+    }
+    @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+      .navbar { background: rgba(2, 6, 23, 0.92) !important; }
+      .card { background: rgba(15, 23, 42, 0.92); }
+    }
+    .card .table { color: var(--text-soft); }
+    .card .table-light, .card .table-light th, .card .table-light td {
+      background: rgba(15, 23, 42, 0.95) !important;
+      color: #ffffff !important;
+    }
+    .text-muted { color: rgba(226, 232, 240, 0.9) !important; }
+    .btn-outline-secondary, .btn-outline-primary { border-width: 1px; }
+    a { color: #e2e8f0; }
+    a:hover, a:focus { color: #ffffff; text-decoration: underline; }
     .badge-missing { font-size: .75em; }
     .track-table th, .track-table td { font-size: .85em; }
     .mb-add-btn { white-space: nowrap; }
@@ -23,7 +64,7 @@
 <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
   <div class="container">
     <a class="navbar-brand" href="{{ url_for('index') }}">🎵 MB Sync</a>
-    <span class="navbar-text text-secondary small">Ashwin Azer · MusicBrainz Sync Tool</span>
+    <span class="navbar-text text-light small">Ashwin Azer · MusicBrainz Sync Tool</span>
   </div>
 </nav>
 
